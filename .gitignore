@@ -13,6 +13,3 @@ notebooks/.ipynb_checkpoints/
 
 # Ignore all plot-related directories in the notebooks folder I created to store diagrams and charts
 notebooks/plots/
-
-# Ignore visualizations
-visualizations/
