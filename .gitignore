@@ -2,7 +2,7 @@
 .env
 
 # Ignore python and jupyter notebook cache files
-venv-tellCo/
+venv-car-insurance/
 __pycache__/
 *.pyc
 *.pyo
