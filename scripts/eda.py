@@ -40,3 +40,22 @@ class EDA:
             self.data[col].value_counts().plot(kind='bar', figsize=(10, 5), title=f"Bar Chart for {col}")
             plt.ylabel('Count')
             plt.show()
+
+    def bivariate_analysis(self):
+        """
+        Explore relationships between numerical variables using scatter plots and correlation matrices.
+        """
+        # Correlation Matrix
+        correlation_matrix = self.data.corr()
+        sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+        plt.title('Correlation Matrix')
+        plt.show()
+
+        # Scatter Plot for TotalPremium vs TotalClaims by ZipCode
+        if {'TotalPremium', 'TotalClaims', 'ZipCode'}.issubset(self.data.columns):
+            plt.figure(figsize=(10, 6))
+            sns.scatterplot(
+                data=self.data, x='TotalPremium', y='TotalClaims', hue='ZipCode', palette='viridis'
+            )
+            plt.title('TotalPremium vs TotalClaims by ZipCode')
+            plt.show()
