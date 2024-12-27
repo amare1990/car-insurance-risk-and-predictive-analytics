@@ -16,3 +16,10 @@ class EDA:
         print(self.data.describe(include='all'))
         print("\nData Types:")
         print(self.data.dtypes)
+
+    def assess_data_quality(self):
+        """
+        Check for missing values in the dataset.
+        """
+        print("Missing Values:")
+        print(self.data.isnull().sum())
