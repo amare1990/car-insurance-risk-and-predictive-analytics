@@ -16,6 +16,9 @@ class EDA:
         print(self.data.describe(include='all'))
         print("\nData Types:")
         print(self.data.dtypes)
+        print("\nUnique Values in Categorical Columns:\n")
+        for col in self.data.select_dtypes(include=["object", "category"]):
+            print(f"{col}: {self.data[col].nunique()} unique values")
 
     def assess_data_quality(self):
         """
@@ -42,23 +45,20 @@ class EDA:
             plt.show()
 
     def bivariate_analysis(self):
-        """
-        Explore relationships between numerical variables using scatter plots and correlation matrices.
-        """
-        # Correlation Matrix
-        correlation_matrix = self.data.corr()
-        sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f')
-        plt.title('Correlation Matrix')
-        plt.show()
-
-        # Scatter Plot for TotalPremium vs TotalClaims by ZipCode
-        if {'TotalPremium', 'TotalClaims', 'ZipCode'}.issubset(self.data.columns):
-            plt.figure(figsize=(10, 6))
-            sns.scatterplot(
-                data=self.data, x='TotalPremium', y='TotalClaims', hue='ZipCode', palette='viridis'
-            )
-            plt.title('TotalPremium vs TotalClaims by ZipCode')
+        """Explores relationships between features like TotalPremium, TotalClaims, and PostalCode."""
+        if {"TotalPremium", "TotalClaims", "PostalCode"}.issubset(self.data.columns):
+            plt.figure(figsize=(8, 6))
+            sns.scatterplot(data=self.data, x="TotalPremium", y="TotalClaims", hue="PostalCode")
+            plt.title("Scatter Plot of TotalPremium vs. TotalClaims by PostalCode")
             plt.show()
+
+            correlation_matrix = self.data[["TotalPremium", "TotalClaims"]].corr()
+            print("Correlation Matrix:\n", correlation_matrix)
+            sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm")
+            plt.title("Correlation Matrix Heatmap")
+            plt.show()
+        else:
+            print("Columns for bivariate analysis are not available in the dataset.")
 
     def geographical_trends(self):
         """Compares trends over geography for features like CoverType, make, etc."""
