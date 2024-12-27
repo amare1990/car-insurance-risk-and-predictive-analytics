@@ -69,3 +69,14 @@ class EDA:
             grouped[['TotalPremium', 'TotalClaims']].plot(kind='bar', figsize=(12, 6), title='Average Premium and Claims by ZipCode')
             plt.ylabel('Average Value')
             plt.show()
+
+    def detect_outliers(self):
+        """
+        Use box plots to detect outliers in numerical data.
+        """
+        numerical_cols = self.data.select_dtypes(include=['number']).columns
+        for col in numerical_cols:
+            plt.figure(figsize=(10, 5))
+            sns.boxplot(data=self.data, x=col)
+            plt.title(f"Box Plot for {col}")
+            plt.show()
