@@ -60,15 +60,17 @@ class EDA:
             plt.title('TotalPremium vs TotalClaims by ZipCode')
             plt.show()
 
-    def data_comparison(self):
-        """
-        Compare trends over geography and other categorical factors.
-        """
-        if 'PostalCode' in self.data.columns:
-            grouped = self.data.groupby('PostalCode').mean()
-            grouped[['TotalPremium', 'TotalClaims']].plot(kind='bar', figsize=(12, 6), title='Average Premium and Claims by ZipCode')
-            plt.ylabel('Average Value')
-            plt.show()
+    def geographical_trends(self):
+        """Compares trends over geography for features like CoverType, make, etc."""
+
+        if {"Province", "CoverType", "make"}.issubset(self.data.columns):
+            for col in ["CoverType", "make"]:
+                plt.figure(figsize=(10, 6))
+                sns.countplot(data=self.data, y=col, hue="Province", order=self.data[col].value_counts().index)
+                plt.title(f"Geographical Trends of {col}")
+                plt.show()
+        else:
+            print("Required columns for geographical trends are not available.")
 
     def detect_outliers(self):
         """
@@ -80,3 +82,27 @@ class EDA:
             sns.boxplot(data=self.data, x=col)
             plt.title(f"Box Plot for {col}")
             plt.show()
+
+    def create_insightful_visualizations(self):
+        """Creates insightful visualizations."""
+        if {"TotalPremium", "TotalClaims", "VehicleType"}.issubset(self.data.columns):
+            # Visualization 1: Premium vs. Claims by Vehicle Type
+            plt.figure(figsize=(10, 6))
+            sns.boxplot(data=self.data, x="VehicleType", y="TotalPremium")
+            plt.title("Total Premium Distribution by Vehicle Type")
+            plt.show()
+
+            # Visualization 2: Claims Distribution by CoverType
+            plt.figure(figsize=(10, 6))
+            sns.barplot(data=self.data, x="CoverType", y="TotalClaims", estimator=sum, ci=None)
+            plt.title("Total Claims by CoverType")
+            plt.show()
+
+            # Visualization 3: Premiums by Province
+            plt.figure(figsize=(10, 6))
+            sns.barplot(data=self.data, x="Province", y="TotalPremium", estimator=sum, ci=None)
+            plt.title("Total Premiums by Province")
+            plt.xticks(rotation=45)
+            plt.show()
+        else:
+            print("Columns for insightful visualizations are not available in the dataset.")
