@@ -59,3 +59,13 @@ class EDA:
             )
             plt.title('TotalPremium vs TotalClaims by ZipCode')
             plt.show()
+
+    def data_comparison(self):
+        """
+        Compare trends over geography and other categorical factors.
+        """
+        if 'PostalCode' in self.data.columns:
+            grouped = self.data.groupby('PostalCode').mean()
+            grouped[['TotalPremium', 'TotalClaims']].plot(kind='bar', figsize=(12, 6), title='Average Premium and Claims by ZipCode')
+            plt.ylabel('Average Value')
+            plt.show()
