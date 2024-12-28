@@ -138,7 +138,7 @@ def clean_dataframe_and_save(df, threshold=30):
 
 
 # Load raw data
-df_raw = pd.read_csv(raw_data_path)
+df_raw = pd.read_csv(raw_data_path, low_memory=False)
 
 # Apply initial processing
 df_initial = initial_processing(df_raw)
@@ -149,3 +149,4 @@ df_no_empty_columns = drop_empty_column(df_initial)
 # Incorporate into the pipeline
 # Apply data cleaning
 df_cleaned = clean_dataframe_and_save(df_no_empty_columns, threshold=params["cleaning"]["threshold"])
+
