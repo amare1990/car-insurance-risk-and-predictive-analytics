@@ -1,0 +1,10 @@
+stages:
+  preprocess:
+    cmd: python scripts/preprocessing.py
+    deps:
+      - scripts/preprocessing.py
+      - data_dvc/raw_data/Mach....csv  # Add the raw data files as dependencies
+    outs:
+      - data_dvc/preprocessed  # Define the output directory for processed data
+    params:
+      - initial_processing
