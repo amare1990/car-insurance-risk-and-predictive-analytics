@@ -58,14 +58,14 @@ def verify_and_clean_transaction_month(df):
 df = pd.read_csv(raw_data_path)
 
 # Fixing mixed data types and checking date time format
-def initial_processing():
+def initial_processing(df):
     df = clean_column_capital_outstanding(df)
     df = clean_column_cross_border(df)
     df_cleaned_initial= verify_and_clean_transaction_month(df)
 
     return df_cleaned_initial
 
-df_cleaned_initial = initial_processing()
+df_cleaned_initial = initial_processing(df)
 
 # After preprocessing
 output_dir = "data_dvc/preprocessed"
