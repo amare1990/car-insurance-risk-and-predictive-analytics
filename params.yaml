@@ -2,3 +2,6 @@ initial_processing: true
 
 # drop the entire empty column
 drop_empty_column: true
+
+# Clean by dropping the rows or replacing with mean and medians
+clean_dataframe_and_save: true

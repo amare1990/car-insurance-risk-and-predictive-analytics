@@ -9,3 +9,4 @@ stages:
     params:
       - initial_processing
       - drop_empty_column
+      - clean_dataframe_and_save

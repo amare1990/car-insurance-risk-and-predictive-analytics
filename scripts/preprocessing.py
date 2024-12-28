@@ -90,6 +90,53 @@ def drop_empty_column(df):
 
     return df_cleaned2
 
+def clean_dataframe_and_save(df, threshold=30):
+    """
+    Cleans the DataFrame by handling missing/null/infinity values based on the threshold percentage.
+    - Drops columns with more than `threshold`% missing values.
+    - Replaces numeric columns with their mean if missing values are less than or equal to `threshold`%.
+    - Replaces categorical columns with their mode if missing values are less than or equal to `threshold`%.
+    Saves the cleaned DataFrame and tracks it with Git and DVC.
+    """
+    total_rows = df.shape[0]
+    drop_threshold = (threshold / 100) * total_rows  # Calculate the drop threshold
+
+    for col in df.columns:
+        # Handle missing values
+        missing_count = df[col].isnull().sum()
+
+        # Handle infinite values only for numeric columns
+        if df[col].dtype in [np.float64, np.int64]:
+            missing_count += np.isinf(df[col].replace([np.inf, -np.inf], np.nan)).sum()
+
+        if missing_count > drop_threshold:
+            # Drop column if missing values exceed threshold
+            print(f"Dropping column {col} with {missing_count} missing/infinite values.")
+            df.drop(columns=[col], inplace=True)
+        elif missing_count > 0:  # Only process columns with missing values
+            if np.issubdtype(df[col].dtype, np.number):
+                # Replace numeric columns with mean
+                print(f"Replacing missing values in numeric column {col} with mean.")
+                df[col].replace([np.inf, -np.inf], np.nan, inplace=True)
+                df[col].fillna(df[col].mean(), inplace=True)
+            else:
+                # Replace categorical columns with mode
+                print(f"Replacing missing values in categorical column {col} with mode.")
+                df[col].fillna(df[col].mode()[0], inplace=True)
+
+    # Save the cleaned DataFrame
+    df_cleaned_path = os.path.join(preprocessed_dir, "MachineLearningRating_cleaned_final.csv")
+    df.to_csv(df_cleaned_path, index=False)
+
+    # Track with Git and DVC
+    os.system(f"git add {df_cleaned_path}")
+    os.system(f"dvc add {df_cleaned_path}")
+    os.system("git commit -m 'Cleaned DataFrame by handling missing/infinite values'")
+    os.system("dvc push")
+
+    return df
+
+
 # Load raw data
 df_raw = pd.read_csv(raw_data_path)
 
@@ -98,3 +145,7 @@ df_initial = initial_processing(df_raw)
 
 # Drop empty columns
 df_no_empty_columns = drop_empty_column(df_initial)
+
+# Incorporate into the pipeline
+# Apply data cleaning
+df_cleaned = clean_dataframe_and_save(df_no_empty_columns, threshold=params["cleaning"]["threshold"])
