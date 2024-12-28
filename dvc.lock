@@ -9,14 +9,15 @@ stages:
       size: 527313989
     - path: scripts/preprocessing.py
       hash: md5
-      md5: 43867ced24b6f065147c246863276d3f
-      size: 4160
+      md5: 48cafc4fa86dcefae18cfa405d8a7c7b
+      size: 3291
     params:
       params.yaml:
+        drop_empty_column: true
         initial_processing: true
     outs:
     - path: data_dvc/preprocessed
       hash: md5
-      md5: c0980fb537cde6b44bcee7c91c4cf302.dir
-      size: 519370796
+      md5: cb731f62344bc595324e13b80c9c98a9.dir
+      size: 518370674
       nfiles: 1
