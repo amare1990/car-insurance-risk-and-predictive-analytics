@@ -57,7 +57,33 @@ def verify_and_clean_transaction_month(df):
 # Load raw data
 df = pd.read_csv(raw_data_path)
 
-# Clean specific columns
-df = clean_column_capital_outstanding(df)
-df = clean_column_cross_border(df)
-df = verify_and_clean_transaction_month(df)
+# Fixing mixed data types and checking date time format
+def initial_processing():
+    df = clean_column_capital_outstanding(df)
+    df = clean_column_cross_border(df)
+    df_cleaned_initial= verify_and_clean_transaction_month(df)
+
+    return df_cleaned_initial
+
+df_cleaned_initial = initial_processing()
+
+# After preprocessing
+output_dir = "data_dvc/preprocessed"
+os.makedirs(output_dir, exist_ok=True)
+
+preprocessed_file = os.path.join(output_dir, "MachineLearningRating_cleaned.csv")
+df_cleaned_initial.to_csv(preprocessed_file, index=False)
+
+# Define the file name
+# preprocessed_file = os.path.join(output_dir, "MachineLearningRating_cleaned.csv")
+# df_cleaned2.to_csv(preprocessed_file, index=False)
+
+# # Now, add the preprocessed data file to DVC
+# os.system(f"git add {preprocessed_file}")  # Add to Git
+# os.system(f"dvc add {preprocessed_file}")  # Add to DVC
+
+# Commit changes to Git and DVC
+# os.system(f"git commit -m 'Add cleaned dataset version'")  # Commit to Git
+# os.system(f"dvc push")  # Push the DVC data to the remote storage
+
+print(f"Preprocessed data saved to {preprocessed_file}")
