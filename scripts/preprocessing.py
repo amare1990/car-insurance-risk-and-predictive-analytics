@@ -84,17 +84,19 @@ def drop_empty_column(df_cleaned1):
 
 # df_cleaned_initial = initial_processing(df)
 
-df_empty_col = drop_empty_column(preprocessed_data)
+
 
 # After preprocessing
 output_dir = "data_dvc/preprocessed"
 os.makedirs(output_dir, exist_ok=True)
 
+df_empty_col = drop_empty_column(preprocessed_data)
 preprocessed_file = os.path.join(output_dir, "MachineLearningRating_cleaned.csv")
 df_empty_col.to_csv(preprocessed_file, index=False)
 
 # preprocessed_file = os.path.join(output_dir, "MachineLearningRating_cleaned.csv")
 # df_empty_col.to_csv(preprocessed_file, index=False)
+
 
 # Check if the file exists
 if os.path.exists(preprocessed_file):
