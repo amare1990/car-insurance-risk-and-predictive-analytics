@@ -1,0 +1,10 @@
+initial_processing: true
+
+# Drop the entire empty column
+drop_empty_column: true
+
+# Clean by dropping the rows or replacing with mean and medians
+cleaning:
+  threshold: 30  # Adjust as needed
+
+clean_dataframe_and_save: true  # Add this line

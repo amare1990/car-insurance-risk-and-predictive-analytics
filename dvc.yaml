@@ -1,0 +1,12 @@
+stages:
+  preprocess:
+    cmd: python scripts/preprocessing.py
+    deps:
+      - scripts/preprocessing.py
+      - data_dvc/raw_data/MachineLearningRating_v3.csv  # Add the raw data files as dependencies
+    outs:
+      - data_dvc/preprocessed  # Define the output directory for processed data
+    params:
+      - initial_processing
+      - drop_empty_column
+      - clean_dataframe_and_save

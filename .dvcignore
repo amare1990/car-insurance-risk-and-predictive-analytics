@@ -1,0 +1,7 @@
+# Add patterns of files dvc should ignore, which could improve
+# the performance. Learn more at
+# https://dvc.org/doc/user-guide/dvcignore
+data_dvc/files/
+
+data_dvc/preprocessed/*
+data_dvc/raw_data/*
