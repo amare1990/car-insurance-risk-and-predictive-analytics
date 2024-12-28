@@ -8,8 +8,8 @@ with open("params.yaml", 'r') as stream:
     params = yaml.safe_load(stream)
 
 # Read raw data
-# raw_data_path = "data_dvc/raw_data/MachineLearningRating_v3.csv"
-# df = pd.read_csv(raw_data_path)
+raw_data_path = "data_dvc/raw_data/MachineLearningRating_v3.csv"
+df = pd.read_csv(raw_data_path)
 
 def clean_column_capital_outstanding(df):
     """
@@ -66,42 +66,48 @@ def initial_processing(df):
     return df_cleaned_initial
 
 # Dropping columns which are entirely empty
-preprocessed_data_path = "data_dvc/preprocessed/MachineLearningRating_v3.csv"
-preprocessed_data = pd.read_csv(preprocessed_data_path)
-def drop_empty_column(df_cleaned1):
-    """
-    Drops entirely empty columns from the DataFrame and returns the cleaned DataFrame.
-    """
-    df_cleaned2 = preprocessed_data.copy()
-    for col in preprocessed_data.columns:
-        if preprocessed_data[col].isna().all():
-            print(f"Column {col} is entirely empty, dropping the column ongoing!")
-            df_cleaned2.drop(columns=[col], inplace=True)
-    return df_cleaned2
+df_cleaned_initial = initial_processing(df)
 
-# df_cleaned_initial = initial_processing(df)
+# Dropping columns which are entirely empty
+# preprocessed_data_path = "data_dvc/preprocessed/MachineLearningRating_v3.csv"
+# preprocessed_data = pd.read_csv(preprocessed_data_path)
+# def drop_empty_column(df_cleaned1):
+#     """
+#     Drops entirely empty columns from the DataFrame and returns the cleaned DataFrame.
+#     """
+#     df_cleaned2 = preprocessed_data.copy()
+#     for col in preprocessed_data.columns:
+#         if preprocessed_data[col].isna().all():
+#             print(f"Column {col} is entirely empty, dropping the column ongoing!")
+#             df_cleaned2.drop(columns=[col], inplace=True)
+#     return df_cleaned2
 
-df_empty_col = drop_empty_column(preprocessed_data)
+# # df_cleaned_initial = initial_processing(df)
+
+# df_empty_col = drop_empty_column(preprocessed_data)
 
 # After preprocessing
 output_dir = "data_dvc/preprocessed"
 os.makedirs(output_dir, exist_ok=True)
 
 preprocessed_file = os.path.join(output_dir, "MachineLearningRating_cleaned.csv")
-df_empty_col.to_csv(preprocessed_file, index=False)
+df_cleaned_initial.to_csv(preprocessed_file, index=False)
 
-
-
-# Define the file name
 # preprocessed_file = os.path.join(output_dir, "MachineLearningRating_cleaned.csv")
-# df_cleaned2.to_csv(preprocessed_file, index=False)
+# df_empty_col.to_csv(preprocessed_file, index=False)
 
-# # Now, add the preprocessed data file to DVC
-# os.system(f"git add {preprocessed_file}")  # Add to Git
-# os.system(f"dvc add {preprocessed_file}")  # Add to DVC
+# Check if the file exists
+if os.path.exists(preprocessed_file):
+    print(f"Preprocessed data saved to {preprocessed_file}")
+else:
+    print(f"Error: Preprocessed data file not found: {preprocessed_file}")
 
-# Commit changes to Git and DVC
-# os.system(f"git commit -m 'Add cleaned dataset version'")  # Commit to Git
-# os.system(f"dvc push")  # Push the DVC data to the remote storage
+
+
+# Add and track the changes with Git and DVC
+os.system(f"git add {preprocessed_file}")  # Add to Git
+os.system(f"dvc add {preprocessed_file}")  # Add to DVC
+os.system("git commit -m 'Overwrite and add cleaned dataset version'")  # Commit to Git
+os.system("dvc push")  # Push the DVC data to the remote storage
 
 print(f"Preprocessed data saved to {preprocessed_file}")
