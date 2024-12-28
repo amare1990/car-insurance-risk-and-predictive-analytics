@@ -1,4 +1,5 @@
 """ A method that encapsulated data and provides pandas dataframe to the EDA class"""
+
 import pandas as pd
 
 
