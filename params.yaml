@@ -1,1 +1,4 @@
 initial_processing: true
+
+# drop the entire empty column
+drop_empty_column: true

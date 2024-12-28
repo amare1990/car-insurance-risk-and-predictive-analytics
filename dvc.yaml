@@ -8,3 +8,4 @@ stages:
       - data_dvc/preprocessed  # Define the output directory for processed data
     params:
       - initial_processing
+      - drop_empty_column
