@@ -6,8 +6,13 @@ import numpy as np
 import pandas as pd
 import yaml
 
+# Locate params.yaml relative to the script's location
+script_dir = os.path.dirname(__file__)  # Directory of the preprocessing.py script
+params_path = os.path.join(script_dir, "../params.yaml")  # Adjust as needed
+
+
 # Read the params.yaml file to get parameters
-with open("params.yaml", 'r', encoding='utf-8') as stream:
+with open(params_path, 'r', encoding='utf-8') as stream:
     params = yaml.safe_load(stream)
 
 # Define raw data path
