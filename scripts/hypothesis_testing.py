@@ -31,3 +31,13 @@ class ABHypothesisTesting:
                 else:
                     self.data[column].fillna(self.data[column].mode()[0], inplace=True)
         print("Imputed remaining missing values.")
+
+    def select_metrics(self, kpi: str):
+        """
+        Select the KPI to measure the impact of features.
+        :param kpi: Key performance indicator column name.
+        """
+        if kpi not in self.data.columns:
+            raise ValueError(f"{kpi} is not a valid column in the dataset.")
+        self.kpi = kpi
+        print(f"KPI selected: {self.kpi}")
