@@ -21,6 +21,7 @@ class EDA:
     - Geographical trend analysis (e.g., Make, CoverType)
     - Visualization of three insightful results
     """
+
     def __init__(self, data: pd.DataFrame):
         self.data = data
 
