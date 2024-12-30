@@ -19,3 +19,4 @@ data/
 data_dvc/raw_data/MachineLearningRating_v3.csv
 data_dvc/files/
 data_dvc/preprocessed/
+data_dvc

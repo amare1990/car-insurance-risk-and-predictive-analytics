@@ -1,7 +1,7 @@
 
 import numpy as np
 import pandas as pd
-
+from scipy.stats import ttest_ind, chi2_contingency
 
 class ABHypothesisTesting:
     def __init__(self, data: pd.DataFrame):
@@ -59,3 +59,35 @@ class ABHypothesisTesting:
             raise ValueError("One of the groups is empty. Ensure valid segmentation.")
 
         print(f"Data segmented by {feature}: Group A ({group_a_value}), Group B ({group_b_value})")
+
+
+    def perform_statistical_test(self, test_type: str = "t-test"):
+        """
+        Perform statistical tests on the segmented data.
+        :param test_type: Type of test to perform ("t-test" or "chi-squared").
+        :return: p-value of the test.
+        """
+        if not hasattr(self, 'group_a') or not hasattr(self, 'group_b'):
+            raise AttributeError("Data segmentation must be performed before testing.")
+
+        if test_type == "t-test":
+            stat, p_value = ttest_ind(self.group_a[self.kpi], self.group_b[self.kpi], nan_policy='omit')
+        elif test_type == "chi-squared":
+            contingency_table = pd.crosstab(self.group_a[self.kpi], self.group_b[self.kpi])
+            stat, p_value, _, _ = chi2_contingency(contingency_table)
+        else:
+            raise ValueError(f"Unsupported test type: {test_type}")
+
+        print(f"Performed {test_type}: p-value = {p_value}")
+        return p_value
+
+    def analyze_results(self, p_value, alpha=0.05):
+        """
+        Analyze statistical test results and interpret the outcome.
+        :param p_value: P-value from the statistical test.
+        :param alpha: Significance level (default = 0.05).
+        """
+        if p_value < alpha:
+            print("Reject the null hypothesis: The feature has a statistically significant effect.")
+        else:
+            print("Fail to reject the null hypothesis: The feature does not have a significant effect.")

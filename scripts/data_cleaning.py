@@ -4,7 +4,7 @@ import pandas as pd
 
 
 class DataCleaning:
-    def __init__(self, input_file="data/MachineLearningRating_v3.csv", output_file="data/cleaned_data.csv"):
+    def __init__(self, input_file="data/MachineLearningRating_v3.csv", output_file="data/final_cleaned_data.csv"):
         """
         Initialize the preprocessor with file paths.
 
@@ -67,14 +67,16 @@ class DataCleaning:
 
         return df_cleaned, dropped_rows_dict
 
-
     def clean_column_capital_outstanding(self, df):
         """
         Cleans the `CapitalOutstanding` column by converting it to a consistent data type.
         """
         column_name = "CapitalOutstanding"
-        float_count = df[column_name].apply(type).isin([float]).sum()
-        str_count = df[column_name].apply(type).isin([str]).sum()
+        # float_count = df[column_name].apply(type).isin([float]).sum()
+        # str_count = df[column_name].apply(type).isin([str]).sum()
+        float_count = sum(isinstance(val, float) for val in df[column_name])
+        str_count = sum(isinstance(val, str) for val in df[column_name])
+
 
         if float_count == 2 and str_count > 0:  # Only 2 float values, others are strings
             print(f"Converting {column_name} to string type for consistency.")
@@ -113,22 +115,22 @@ class DataCleaning:
         print(f"Invalid dates found in {column_name}: {invalid_dates}")
         return df
 
-    def initial_processing(self):
-        """
-        Perform the initial data cleaning and save the results.
-        """
-        # Load the data
-        df = self.load_data()
+    # def initial_processing(self):
+    #     """
+    #     Perform the initial data cleaning and save the results.
+    #     """
+    #     # Load the data
+    #     df = self.load_data()
 
-        # Perform cleaning steps
-        df = self.clean_column_capital_outstanding(df)
-        df = self.clean_column_cross_border(df)
-        df_cleaned_initial = self.verify_and_clean_transaction_month(df)
+    #     # Perform cleaning steps
+    #     df = self.clean_column_capital_outstanding(df)
+    #     df = self.clean_column_cross_border(df)
+    #     df_cleaned_initial = self.verify_and_clean_transaction_month(df)
 
-        # Save cleaned data
-        self.save_data(df_cleaned_initial)
+    #     # Save cleaned data
+    #     self.save_data(df_cleaned_initial)
 
-        return df_cleaned_initial
+    #     return df_cleaned_initial
 
     def drop_empty_column(self, df):
         """
@@ -141,7 +143,6 @@ class DataCleaning:
                 df_cleaned2.drop(columns=[col], inplace=True)
 
         return df_cleaned2
-
 
     def clean_dataframe_and_save(self, df, threshold=30):
         """
@@ -184,3 +185,29 @@ class DataCleaning:
                         f"Replacing missing values in categorical column {col} with mode.")
                     df[col].fillna(df[col].mode()[0], inplace=True)
         return df
+
+    def process_pipeline(self):
+        """
+        Executes the full data cleaning pipeline and saves the final cleaned data.
+        """
+        # Step 1: Load data
+        df = self.load_data()
+
+        # Step 2: Apply cleaning steps
+        df, _ = self.customized_drop_duplicates(df)
+        df = self.clean_column_capital_outstanding(df)
+        df = self.clean_column_cross_border(df)
+        df = self.verify_and_clean_transaction_month(df)
+        df = self.drop_empty_column(df)
+        df = self.clean_dataframe_and_save(df)
+
+        # Save the final cleaned DataFrame
+        self.save_data(df)
+        print(f"Final cleaned data saved to {self.output_file}.")
+        return df
+
+    def save_data(self, df):
+        """
+        Save the cleaned DataFrame to the output file.
+        """
+        df.to_csv(self.output_file, index=False)
