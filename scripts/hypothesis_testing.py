@@ -41,3 +41,21 @@ class ABHypothesisTesting:
             raise ValueError(f"{kpi} is not a valid column in the dataset.")
         self.kpi = kpi
         print(f"KPI selected: {self.kpi}")
+
+    def segment_data(self, feature: str, group_a_value, group_b_value):
+        """
+        Segment data into control (Group A) and test (Group B) groups based on a feature.
+        :param feature: The column name to segment by.
+        :param group_a_value: The value to select Group A.
+        :param group_b_value: The value to select Group B.
+        """
+        if feature not in self.data.columns:
+            raise ValueError(f"{feature} is not a valid column in the dataset.")
+
+        self.group_a = self.data[self.data[feature] == group_a_value]
+        self.group_b = self.data[self.data[feature] == group_b_value]
+
+        if self.group_a.empty or self.group_b.empty:
+            raise ValueError("One of the groups is empty. Ensure valid segmentation.")
+
+        print(f"Data segmented by {feature}: Group A ({group_a_value}), Group B ({group_b_value})")
