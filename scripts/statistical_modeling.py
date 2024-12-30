@@ -53,3 +53,16 @@ class StatisticalModeling:
         self.data['PremiumPerClaim'] = self.data['TotalPremium'] / (self.data['TotalClaims'] + 1)
         print("Created new feature: PremiumPerClaim")
 
+    def encode_categorical_data(self, method='one-hot'):
+        categorical_columns = self.data.select_dtypes(include=['object']).columns
+        if method == 'one-hot':
+            self.data = pd.get_dummies(self.data, columns=categorical_columns, drop_first=True)
+        elif method == 'label':
+            label_enc = LabelEncoder()
+            for col in categorical_columns:
+                self.data[col] = label_enc.fit_transform(self.data[col])
+        else:
+            raise ValueError(f"Unsupported encoding method: {method}")
+        print(f"Encoded categorical columns using {method} encoding.")
+
+
