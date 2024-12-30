@@ -1,5 +1,3 @@
-
-import numpy as np
 import pandas as pd
 from scipy.stats import ttest_ind, chi2_contingency
 
@@ -10,27 +8,9 @@ class ABHypothesisTesting:
         :param data: A pandas DataFrame containing the dataset.
         """
         self.data = data
-
-    def handle_missing_values(self):
-        """
-        Handle missing values in the dataset:
-        - Drop columns with > 30% missing values.
-        - Impute remaining missing values with mean (numerical) or mode (categorical).
-        """
-        # Drop columns with > 30% missing values
-        missing_percent = self.data.isnull().mean()
-        columns_to_drop = missing_percent[missing_percent > 0.3].index.tolist()
-        self.data.drop(columns=columns_to_drop, axis=1, inplace=True)
-        print(f"Dropped columns: {columns_to_drop}")
-
-        # Impute remaining missing values
-        for column in self.data.columns:
-            if self.data[column].isnull().sum() > 0:
-                if self.data[column].dtype in ['float64', 'int64']:
-                    self.data[column].fillna(self.data[column].mean(), inplace=True)
-                else:
-                    self.data[column].fillna(self.data[column].mode()[0], inplace=True)
-        print("Imputed remaining missing values.")
+        self.kpi = None
+        self.group_a = None
+        self.group_b = None
 
     def select_metrics(self, kpi: str):
         """
@@ -42,12 +22,12 @@ class ABHypothesisTesting:
         self.kpi = kpi
         print(f"KPI selected: {self.kpi}")
 
-    def segment_data(self, feature: str, group_a_value, group_b_value):
+    def segment_by_category(self, feature: str, group_a_value, group_b_value):
         """
-        Segment data into control (Group A) and test (Group B) groups based on a feature.
+        Segment data into control (Group A) and test (Group B) groups by categorical feature.
         :param feature: The column name to segment by.
-        :param group_a_value: The value to select Group A.
-        :param group_b_value: The value to select Group B.
+        :param group_a_value: The value for Group A.
+        :param group_b_value: The value for Group B.
         """
         if feature not in self.data.columns:
             raise ValueError(f"{feature} is not a valid column in the dataset.")
@@ -60,6 +40,22 @@ class ABHypothesisTesting:
 
         print(f"Data segmented by {feature}: Group A ({group_a_value}), Group B ({group_b_value})")
 
+    def segment_by_numeric_median(self, feature: str):
+        """
+        Segment data into control (Group A) and test (Group B) groups by a feature's median value.
+        :param feature: The numeric column for segmentation.
+        """
+        if feature not in self.data.columns:
+            raise ValueError(f"{feature} is not a valid column in the dataset.")
+
+        median_value = self.data[feature].median()
+        self.group_a = self.data[self.data[feature] >= median_value]
+        self.group_b = self.data[self.data[feature] < median_value]
+
+        if self.group_a.empty or self.group_b.empty:
+            raise ValueError("One of the groups is empty. Ensure valid segmentation.")
+
+        print(f"Data segmented by {feature} median: Group A (>= {median_value}), Group B (< {median_value})")
 
     def perform_statistical_test(self, test_type: str = "t-test"):
         """
