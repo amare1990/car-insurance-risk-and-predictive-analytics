@@ -1,10 +1,20 @@
-import os
+""" Cleans the dataset.
+Fixes mixed data type problem. Converts date into standard format.
+Checks if there is duplicate rows. Drop columns if the percentage
+of null/nan/infinit/-infinity is greater than 30%.
+
+"""
+
 import numpy as np
 import pandas as pd
 
 
 class DataCleaning:
-    def __init__(self, input_file="data/MachineLearningRating_v3.csv", output_file="data/final_cleaned_data.csv"):
+
+    """ This class encapsulates method to drop unclean data. """
+
+    def __init__(self, input_file="data/MachineLearningRating_v3.csv",
+                 output_file="data/final_cleaned_data.csv"):
         """
         Initialize the preprocessor with file paths.
 
@@ -27,16 +37,23 @@ class DataCleaning:
             raise
 
     def customized_drop_duplicates(self, df):
-        # Before dropping duplicates, get the initial number of rows and identify duplicates
+        """
+
+        Drop duplicate rows and outputs necessary message.
+        """
+        # Before dropping duplicates, get the initial number of rows and
+        # identify duplicates
         initial_row_count = df.shape[0]
 
         # Identify duplicate rows (including the first occurrence)
         duplicate_rows = df[df.duplicated(keep=False)]
 
-        # Initialize a dictionary to track dropped rows for each first occurrence
+        # Initialize a dictionary to track dropped rows for each first
+        # occurrence
         dropped_rows_dict = {}
 
-        # Iterate over duplicate rows to find the first occurrence and the rows to be dropped
+        # Iterate over duplicate rows to find the first occurrence and the rows
+        # to be dropped
         for idx in duplicate_rows.index:
             # Get the first occurrence index (where the duplicate group starts)
             first_occurrence = df.duplicated(keep='first').idxmax()
@@ -44,7 +61,8 @@ class DataCleaning:
             if first_occurrence not in dropped_rows_dict:
                 dropped_rows_dict[first_occurrence] = []
 
-            # Append the index of the current duplicate row to the dictionary (excluding the first occurrence)
+            # Append the index of the current duplicate row to the dictionary
+            # (excluding the first occurrence)
             if idx != first_occurrence:
                 dropped_rows_dict[first_occurrence].append(idx)
 
@@ -77,31 +95,38 @@ class DataCleaning:
         float_count = sum(isinstance(val, float) for val in df[column_name])
         str_count = sum(isinstance(val, str) for val in df[column_name])
 
-
         if float_count == 2 and str_count > 0:  # Only 2 float values, others are strings
             print(f"Converting {column_name} to string type for consistency.")
             df[column_name] = df[column_name].fillna("").astype(str)
         else:
-            print(f"Converting {column_name} to float type for numerical processing.")
+            print(
+                f"Converting {column_name} to float type for numerical processing.")
             df[column_name] = pd.to_numeric(df[column_name], errors='coerce')
         return df
 
     def clean_column_cross_border(self, df):
         """
-        Cleans the `CrossBorder` column by handling 'No' values as strings and filling empty/NaN values.
+        Cleans the `CrossBorder` column by handling 'No' values as strings and filling
+        empty/NaN values.
         """
         column_name = "CrossBorder"
         no_count = (df[column_name] == "No").sum()
         nan_count = df[column_name].isnull().sum()
 
-        print(f"{column_name}: {no_count} 'No' values and {nan_count} missing/NaN values.")
+        print(
+            f"{column_name}: {no_count} 'No' values and {nan_count} missing/NaN values.")
 
-        # Convert the column to string, filling NaN values with "Unknown" or other placeholder
-        print(f"Converting {column_name} to string type and handling missing values.")
+        # Convert the column to string, filling NaN values with "Unknown" or
+        # other placeholder
+        print(
+            f"Converting {column_name} to string type and handling missing values.")
         df[column_name] = df[column_name].fillna("Unknown").astype(str)
 
         # Verify the types of the cleaned column
-        print(f"{column_name} cleaned: now has types {df[column_name].apply(type).unique()} and example values {df[column_name].unique()[:5]}")
+        print(
+            f"{column_name} cleaned: now has types {df[column_name].apply(type).unique()} \
+            and example values {df[column_name].unique()[:5]}"
+        )
 
         return df
 
@@ -146,7 +171,8 @@ class DataCleaning:
 
     def clean_dataframe_and_save(self, df, threshold=30):
         """
-        Cleans the DataFrame by handling missing/null/infinity values based on the threshold percentage.
+        Cleans the DataFrame by handling missing/null/infinity values based on
+        the threshold percentage.
         - Drops columns with more than `threshold`% missing values.
         - Replaces numeric columns with their mean if missing values are less than or equal
           to `threshold`%.

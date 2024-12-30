@@ -1,7 +1,11 @@
+""" Conducts null hypothesis regarding postal code, gender, provinces to assess risks. """
 import pandas as pd
 from scipy.stats import ttest_ind, chi2_contingency
 
+
 class ABHypothesisTesting:
+    """ Class that encapsulates all methods to conduct A B hypothesis testing. """
+
     def __init__(self, data: pd.DataFrame):
         """
         Initialize the class with the dataset.
@@ -30,15 +34,18 @@ class ABHypothesisTesting:
         :param group_b_value: The value for Group B.
         """
         if feature not in self.data.columns:
-            raise ValueError(f"{feature} is not a valid column in the dataset.")
+            raise ValueError(
+                f"{feature} is not a valid column in the dataset.")
 
         self.group_a = self.data[self.data[feature] == group_a_value]
         self.group_b = self.data[self.data[feature] == group_b_value]
 
         if self.group_a.empty or self.group_b.empty:
-            raise ValueError("One of the groups is empty. Ensure valid segmentation.")
+            raise ValueError(
+                "One of the groups is empty. Ensure valid segmentation.")
 
-        print(f"Data segmented by {feature}: Group A ({group_a_value}), Group B ({group_b_value})")
+        print(
+            f"Data segmented by {feature}: Group A ({group_a_value}), Group B ({group_b_value})")
 
     def segment_by_numeric_median(self, feature: str):
         """
@@ -46,16 +53,20 @@ class ABHypothesisTesting:
         :param feature: The numeric column for segmentation.
         """
         if feature not in self.data.columns:
-            raise ValueError(f"{feature} is not a valid column in the dataset.")
+            raise ValueError(
+                f"{feature} is not a valid column in the dataset.")
 
         median_value = self.data[feature].median()
         self.group_a = self.data[self.data[feature] >= median_value]
         self.group_b = self.data[self.data[feature] < median_value]
 
         if self.group_a.empty or self.group_b.empty:
-            raise ValueError("One of the groups is empty. Ensure valid segmentation.")
+            raise ValueError(
+                "One of the groups is empty. Ensure valid segmentation.")
 
-        print(f"Data segmented by {feature} median: Group A (>= {median_value}), Group B (< {median_value})")
+        print(
+            f"Data segmented by {feature} median: Group A (>= {median_value}), \
+            Group B (< {median_value})")
 
     def perform_statistical_test(self, test_type: str = "t-test"):
         """
@@ -64,13 +75,16 @@ class ABHypothesisTesting:
         :return: p-value of the test.
         """
         if not hasattr(self, 'group_a') or not hasattr(self, 'group_b'):
-            raise AttributeError("Data segmentation must be performed before testing.")
+            raise AttributeError(
+                "Data segmentation must be performed before testing.")
 
         if test_type == "t-test":
-            stat, p_value = ttest_ind(self.group_a[self.kpi], self.group_b[self.kpi], nan_policy='omit')
+            _, p_value = ttest_ind(
+                self.group_a[self.kpi], self.group_b[self.kpi], nan_policy='omit')
         elif test_type == "chi-squared":
-            contingency_table = pd.crosstab(self.group_a[self.kpi], self.group_b[self.kpi])
-            stat, p_value, _, _ = chi2_contingency(contingency_table)
+            contingency_table = pd.crosstab(
+                self.group_a[self.kpi], self.group_b[self.kpi])
+            _, p_value, _, _ = chi2_contingency(contingency_table)
         else:
             raise ValueError(f"Unsupported test type: {test_type}")
 
@@ -84,6 +98,9 @@ class ABHypothesisTesting:
         :param alpha: Significance level (default = 0.05).
         """
         if p_value < alpha:
-            print("Reject the null hypothesis: The feature has a statistically significant effect.")
+            print(
+                "Reject the null hypothesis: The feature has a statistically significant effect.")
         else:
-            print("Fail to reject the null hypothesis: The feature does not have a significant effect.")
+            print(
+                "Fail to reject the null hypothesis: The feature does not have a significant \
+                effect.")

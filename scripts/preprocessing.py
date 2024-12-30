@@ -7,7 +7,8 @@ import pandas as pd
 import yaml
 
 # Locate params.yaml relative to the script's location
-script_dir = os.path.dirname(__file__)  # Directory of the preprocessing.py script
+# Directory of the preprocessing.py script
+script_dir = os.path.dirname(__file__)
 params_path = os.path.join(script_dir, "../params.yaml")  # Adjust as needed
 
 
