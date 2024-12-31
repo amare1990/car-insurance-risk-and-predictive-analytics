@@ -11,18 +11,18 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
 
-from scripts.data_cleaning import DataCleaning
+# from scripts.data_cleaning import DataCleaning
 
 class StatisticalModeling:
-    def __init__(self):
+    def __init__(self, data: pd.DataFrame):
         """
         Initialize the class with the dataset.
         :param data: A pandas DataFrame containing the dataset.
         """
-        input_file="../data/MachineLearningRating_v3.csv"
-        output_file="../data/final_cleaned_data_stmodeling.csv"
-        data_cleaner = DataCleaning(input_file, output_file)
-        data = data_cleaner.process_pipeline()
+        # input_file="../data/MachineLearningRating_v3.csv"
+        # output_file="../data/final_cleaned_data_stmodeling.csv"
+        # data_cleaner = DataCleaning(input_file, output_file)
+        # data = data_cleaner.process_pipeline()
 
         self.data = data
         self.X_train = None
@@ -72,7 +72,11 @@ class StatisticalModeling:
                 self.data[col] = label_enc.fit_transform(self.data[col])
         else:
             raise ValueError(f"Unsupported encoding method: {method}")
+        # Saving encoded data
+        output_file="../data/Encoded_data.csv"
+        self.data.to_csv(self.output_file, index=False)
         print(f"Encoded categorical columns using {method} encoding.")
+
 
     def split_data(self, target="TotalClaims", test_size=0.2):
         """
@@ -87,5 +91,25 @@ class StatisticalModeling:
         )
         print(f"Data split into {len(self.X_train)} train samples and
               {len(self.X_test)} test samples.")
+
+
+    # def build_model(self, model_type='linearregression'):
+    #     """
+    #     Build the model based on the selected type.
+    #     :param model_type: The type of model to build. Options: 'linear_regression', 'decision_tree', 'random_forest', 'xgboost'.
+    #     """
+    #     if model_type=='linear_regression':
+    #         model = LinearRegression()
+    #     elif model_type == 'decision_tree':
+    #         model = DecisionTreeRegressor()
+    #     elif model_type == 'random_forest':
+    #         model = RandomForestRegressor(n_estimators=100, random_state=42)
+    #     else:
+    #         raise ValueError(f'Unsupported model type: {model_type}')
+
+    #     model.fit(self.X_train, self.y_train)
+    #     self.models[model_type] = model
+    #     print(f'Model {model_type} built and trained')
+
 
 
