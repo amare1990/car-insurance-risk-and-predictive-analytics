@@ -1,5 +1,8 @@
 import numpy as np
 import pandas as pd
+
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
@@ -12,6 +15,7 @@ from sklearn.pipeline import Pipeline
 
 # Import feature importance and model interpretability analysis modules
 import shap
+import lime
 from lime.lime_tabular import LimeTabularExplainer
 
 
@@ -161,6 +165,33 @@ class StatisticalModeling:
         # Summary plot
         print(f"Generating SHAP summary plot for {model_type}...")
         shap.summary_plot(shap_values, self.X_test, plot_type="bar")
+
+
+    def interpret_with_lime(self, model_type='random_forest', sample_index=0):
+        """
+        Interpret model predictions using LIME for a specific instance.
+        :param model_type: The model type to interpret.
+        :param sample_index: Index of the sample to interpret from the test set.
+        """
+        model = self.models.get(model_type)
+        if model is None:
+            raise ValueError(f'Model {model_type} has not been trained yet!')
+
+        # Prepare the LIME explainer
+        explainer = lime.lime_tabular.LimeTabularExplainer(
+            training_data=self.X_train.values,
+            feature_names=self.X_train.columns.tolist(),
+            class_names=['Target'],
+            mode='regression' if model_type in ['linear_regression', 'decision_tree', 'random_forest'] else 'classification'
+        )
+
+        sample = self.X_test.iloc[sample_index].values
+        explanation = explainer.explain_instance(sample, model.predict, num_features=10)
+
+        # Display explanation
+        explanation.show_in_notebook()
+        explanation.as_pyplot_figure()
+        plt.show()
 
 
 
