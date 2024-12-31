@@ -193,6 +193,27 @@ class StatisticalModeling:
         explanation.as_pyplot_figure()
         plt.show()
 
+    def compare_model_performance(self):
+        """
+        Compare the performance of all trained models.
+        """
+        if not self.models:
+            print("No models have been trained yet!")
+            return
+
+        performance_metrics = {}
+        for model_type, model in self.models.items():
+            print(f"Evaluating performance for {model_type}...")
+            metrics = self.evaluate_model(model_type=model_type)
+            performance_metrics[model_type] = metrics
+
+        # Report performance comparison
+        print("\nModel Performance Comparison:")
+        for model_type, metrics in performance_metrics.items():
+            print(f"{model_type}: {metrics}")
+
+        return performance_metrics
+
 
 
 
