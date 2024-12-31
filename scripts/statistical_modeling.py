@@ -93,23 +93,23 @@ class StatisticalModeling:
               {len(self.X_test)} test samples.")
 
 
-    # def build_model(self, model_type='linearregression'):
-    #     """
-    #     Build the model based on the selected type.
-    #     :param model_type: The type of model to build. Options: 'linear_regression', 'decision_tree', 'random_forest', 'xgboost'.
-    #     """
-    #     if model_type=='linear_regression':
-    #         model = LinearRegression()
-    #     elif model_type == 'decision_tree':
-    #         model = DecisionTreeRegressor()
-    #     elif model_type == 'random_forest':
-    #         model = RandomForestRegressor(n_estimators=100, random_state=42)
-    #     else:
-    #         raise ValueError(f'Unsupported model type: {model_type}')
+    def build_model(self, model_type='linearregression'):
+        """
+        Build the model based on the selected type.
+        :param model_type: The type of model to build. Options: 'linear_regression', 'decision_tree', 'random_forest', 'xgboost'.
+        """
+        if model_type=='linear_regression':
+            model = LinearRegression()
+        elif model_type == 'decision_tree':
+            model = DecisionTreeRegressor()
+        elif model_type == 'random_forest':
+            model = RandomForestRegressor(n_estimators=100, random_state=42)
+        else:
+            raise ValueError(f'Unsupported model type: {model_type}')
 
-    #     model.fit(self.X_train, self.y_train)
-    #     self.models[model_type] = model
-    #     print(f'Model {model_type} built and trained')
+        model.fit(self.X_train, self.y_train)
+        self.models[model_type] = model
+        print(f'Model {model_type} built and trained')
 
 
 
