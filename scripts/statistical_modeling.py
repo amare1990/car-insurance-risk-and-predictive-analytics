@@ -111,5 +111,35 @@ class StatisticalModeling:
         self.models[model_type] = model
         print(f'Model {model_type} built and trained')
 
+    def evaluate_model(self, model_type='linear_regression'):
+        """
+        Evaluate the model using appropriate metrics like RMSE, accuracy, precision, recall, and F1 score.
+        :param model_type: The model type to evaluate.
+        :return: Model evaluation metrics.
+        """
+        model = self.models.get(model_type)
+        if model is None:
+            raise ValueError(f'Model {model_type} has not been trained yet!')
+
+        # Make predictions
+        predictions = model.predict(self.X_test)
+        # For regression models, we use MSE, RMSE, and R2
+        # For classification models, we can use accuracy, precision, recall, F1-score
+        if model_type == 'linear_regression' or model_type in ['decision_tree', 'random_forest']:
+            mse = mean_squared_error(self.y_test, predictions)
+            rmse = np.sqrt(mse)
+            print(f'Model {model_type}- RMSE: {rmse}, MSE: {mse}')
+            return {'RMSE':rmse, 'MSE': mse}
+        else:
+            acurracy = accuracy_score(self.y_test, predictions)
+            precision = precision_score(self.y_test, predictions, average='binary', zero_division=1)
+            recall = recall_score(self.y_test, predictions, average='binary', zero_division=1)
+            f1 = f1_score(self.y_test, predictions, average='binary', zero_division=1)
+            print(f'Model {model_type} - Accuracy: {acurracy}, Precision: {precision}, Recall: {recall}, F1_score: {f1}')
+            return {"Accuracy": acurracy, "Precision": precision, "Recall": recall, "F1-score": f1}
+
+
+
+
 
 
