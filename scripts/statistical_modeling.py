@@ -5,10 +5,14 @@ from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, accuracy_score, precision_score, recall_score, f1_score
-# import xgboost as xgb
+import xgboost as xgb
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
+
+# Import feature importance and model interpretability analysis modules
+import shap
+from lime.lime_tabular import LimeTabularExplainer
 
 
 # from scripts.data_cleaning import DataCleaning
@@ -102,9 +106,11 @@ class StatisticalModeling:
         if model_type=='linear_regression':
             model = LinearRegression()
         elif model_type == 'decision_tree':
-            model = DecisionTreeRegressor()
+            model = DecisionTreeRegressor(random_state=42)
         elif model_type == 'random_forest':
             model = RandomForestRegressor(n_estimators=100, random_state=42)
+        elif model_type == 'xgboost':
+            model = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100, random_state=42)
         else:
             raise ValueError(f'Unsupported model type: {model_type}')
 
@@ -139,7 +145,22 @@ class StatisticalModeling:
             print(f'Model {model_type} - Accuracy: {acurracy}, Precision: {precision}, Recall: {recall}, F1_score: {f1}')
             return {"Accuracy": acurracy, "Precision": precision, "Recall": recall, "F1-score": f1}
 
+    def analyze_feature_importance(self, model_type='random_forest'):
+        """
+        Analyze feature importance using SHAP for the specified model type.
+        :param model_type: The model type to analyze.
+        """
+        model = self.models.get(model_type)
+        if model is None:
+            raise ValueError(f'Model {model_type} has not been trained yet!')
 
+        # Use SHAP to explain predictions
+        explainer = shap.TreeExplainer(model) if model_type in ['random_forest', 'decision_tree'] else shap.Explainer(model)
+        shap_values = explainer.shap_values(self.X_test)
+
+        # Summary plot
+        print(f"Generating SHAP summary plot for {model_type}...")
+        shap.summary_plot(shap_values, self.X_test, plot_type="bar")
 
 
 
