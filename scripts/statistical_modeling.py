@@ -73,6 +73,9 @@ class StatisticalModeling:
 
     def encode_categorical_data(self, method='one-hot'):
         categorical_columns = self.data.select_dtypes(include=['object']).columns
+        for col in categorical_columns:
+            print(f"{col}: {self.data[col].nunique()} unique values")
+
         if method == 'one-hot':
             self.data = pd.get_dummies(self.data, columns=categorical_columns, drop_first=True)
         elif method == 'label':
@@ -101,12 +104,43 @@ class StatisticalModeling:
         )
         print(f"Data split into {len(self.X_train)} train samples and {len(self.X_test)} test samples.")
 
+    def fit_postalcode_models(self, postalcode_column="PostalCode", target="TotalClaims"):
+        """
+        Fit a linear regression model for each unique zipcode to predict TotalClaims.
+        :param zipcode_column: The column representing zipcodes.
+        :param target: The target column to predict.
+        :return: Dictionary of models for each zipcode.
+        """
+        postalcode_models = {}
+        unique_postalcodes = self.data[postalcode_column].unique()
 
-    def build_model(self, model_type='linearregression'):
+        for postalcode in unique_postalcodes:
+            postalcode_data = self.data[self.data[postalcode_column] == postalcode]
+            if len(postalcode_data) < 10:  # Ensure enough data points for modeling
+                continue
+
+            X = postalcode_data.drop(columns=[target, postalcode_column])
+            y = postalcode_data[target]
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+            model = LinearRegression()
+            model.fit(X_train, y_train)
+            postalcode_models[postalcode] = model
+
+        print(f"Fitted linear regression models for {len(postalcode_models)} postalcodes.")
+        return postalcode_models
+
+
+    def build_model(self, features, target="CalculatedPremiumPerTerm", model_type="random_forest"):
         """
         Build the model based on the selected type.
         :param model_type: The type of model to build. Options: 'linear_regression', 'decision_tree', 'random_forest', 'xgboost'.
         """
+        X = self.data[features]
+        y = self.data[target]
+
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
         if model_type=='linear_regression':
             model = LinearRegression()
         elif model_type == 'decision_tree':
