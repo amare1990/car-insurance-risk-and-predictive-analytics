@@ -14,7 +14,7 @@ from sklearn.pipeline import Pipeline
 # from scripts.data_cleaning import DataCleaning
 
 class StatisticalModeling:
-    def __init__(self, data: pd.DataFrame):
+    def __init__(self, data: pd.DataFrame, output_file="../data/Encoded_data.csv"):
         """
         Initialize the class with the dataset.
         :param data: A pandas DataFrame containing the dataset.
@@ -25,6 +25,7 @@ class StatisticalModeling:
         # data = data_cleaner.process_pipeline()
 
         self.data = data
+        self.output_file = output_file
         self.X_train = None
         self.X_test = None
         self.y_train = None
@@ -74,6 +75,7 @@ class StatisticalModeling:
             raise ValueError(f"Unsupported encoding method: {method}")
         # Saving encoded data
         output_file="../data/Encoded_data.csv"
+        self.outpu_file = output_file
         self.data.to_csv(self.output_file, index=False)
         print(f"Encoded categorical columns using {method} encoding.")
 
@@ -89,8 +91,7 @@ class StatisticalModeling:
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             X, y, test_size=test_size, random_state=42
         )
-        print(f"Data split into {len(self.X_train)} train samples and
-              {len(self.X_test)} test samples.")
+        print(f"Data split into {len(self.X_train)} train samples and {len(self.X_test)} test samples.")
 
 
     def build_model(self, model_type='linearregression'):
