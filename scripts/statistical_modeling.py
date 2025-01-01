@@ -57,7 +57,7 @@ class StatisticalModeling:
         """
         # Identify date-like columns and exclude them
         date_columns = []
-        for col in self.data.columns:
+        for col in self.data[features_to_encode]:
             try:
                 pd.to_datetime(self.data[col], errors='coerce')  # Check if column is date-like
                 date_columns.append(col)
@@ -73,7 +73,7 @@ class StatisticalModeling:
 
         # Print info about columns being encoded
         print(f"Columns to encode: {features_to_encode}")
-        print(f"Date-like columns excluded: {date_columns}")
+        # print(f"Date-like columns excluded: {date_columns}")
 
         # Perform encoding
         if method == 'one-hot':
@@ -92,9 +92,6 @@ class StatisticalModeling:
         self.output_file = output_file
         self.data.to_csv(self.output_file, index=False)
         print(f"Encoded categorical columns using {method} encoding.")
-
-
-
 
 
     def split_data(self, target="TotalClaims", test_size=0.2):
@@ -144,14 +141,17 @@ class StatisticalModeling:
         :return: Dictionary of trained models.
         """
         models = {}
-        X = self.data.drop(columns=[target])
+        X = self.data[features]
         y = self.data[target]
+
+        # Exclude date or object type columns from X
+        X = X.select_dtypes(include=['number'])  # Select only numerical columns
 
         # For classification task, create target variable for profit/loss
         if task_type == "classification":
-            features['profit_loss'] = (features['TotalPremium'] - features['TotalClaims']).apply(
+            self.data['profit_loss'] = (self.data['TotalPremium'] - self.data['TotalClaims']).apply(
                 lambda x: 'profit' if x > 0 else 'loss')
-            y = features['profit_loss']  # Update target variable to profit_loss
+            y = self.data['profit_loss']  # Update target variable to profit_loss
 
             unique_classes = len(y.unique())
             print(f"Detected classification task with {unique_classes} classes.")
@@ -179,8 +179,8 @@ class StatisticalModeling:
                     model = DecisionTreeRegressor()
                 elif model_type == 'random_forest':
                     model = RandomForestRegressor()
-                elif model_type == 'xgboost':
-                    model = xgb.XGBRegressor()
+                # elif model_type == 'xgboost':
+                #     model = xgb.XGBRegressor()
                 else:
                     print(f"Unsupported regression model: {model_type}")
                     continue
@@ -190,8 +190,8 @@ class StatisticalModeling:
                     model = DecisionTreeClassifier()
                 elif model_type == 'random_forest':
                     model = RandomForestClassifier()
-                elif model_type == 'xgboost':
-                    model = xgb.XGBClassifier()
+                # elif model_type == 'xgboost':
+                #     model = xgb.XGBClassifier()
                 else:
                     print(f"Unsupported classification model: {model_type}")
                     continue
@@ -202,9 +202,12 @@ class StatisticalModeling:
             # Train the model
             model.fit(self.X_train, y_train)
             models[model_type] = model
+            print(f"Trained model type before assigning into self.models is {model_type}")
+            self.models = models
+            print(f"Trained model type after assigning into self.models is {model_type} and the rained model is {self.models}")
             print(f"{model_type} model trained successfully.")
 
-        return models
+        return self.models
 
 
 
@@ -235,13 +238,27 @@ class StatisticalModeling:
             # Classification evaluation
             print(f"Classification evaluation for {model_type} taking place...")
 
-            if len(self.y_test.unique()) > 2:  # Multiclass
-                predictions = np.argmax(y_pred, axis=1) if hasattr(model, "predict_proba") else y_pred
+            # Ensure consistent label encoding for evaluation
+            if isinstance(self.y_test.iloc[0], str):  # Check if labels are strings
+                encoder = LabelEncoder()
+                self.y_test = encoder.fit_transform(self.y_test)
+                if hasattr(model, "classes_") and isinstance(model.classes_[0], str):
+                    model.classes_ = encoder.transform(model.classes_)
+
+            if len(np.unique(self.y_test)) > 2:  # Multiclass classification
+                predictions = (
+                    np.argmax(model.predict_proba(self.X_test), axis=1) if hasattr(model, "predict_proba") else y_pred
+                )
                 average = 'weighted'
             else:  # Binary classification
-                predictions = (y_pred > 0.5).astype(int) if hasattr(model, "predict_proba") else y_pred
+                if hasattr(model, "predict_proba"):
+                    y_prob = model.predict_proba(self.X_test)[:, 1]  # Probability of the positive class
+                    predictions = (y_prob > 0.5).astype(int)
+                else:
+                    predictions = y_pred  # Fallback to direct predictions if probabilities are unavailable
                 average = 'binary'
 
+            # Compute metrics
             accuracy = accuracy_score(self.y_test, predictions)
             precision = precision_score(self.y_test, predictions, average=average, zero_division=1)
             recall = recall_score(self.y_test, predictions, average=average, zero_division=1)
@@ -255,40 +272,60 @@ class StatisticalModeling:
 
 
 
-    def analyze_feature_importance(self, model_type='random_forest'):
+    def analyze_feature_importance(self, model_type='random_forest', task_type='classification'):
         """
-        Analyze feature importance using SHAP for the specified model type.
+        Analyze feature importance using SHAP for the specified model type and task type.
         :param model_type: The model type to analyze.
+        :param task_type: The type of task ('classification' or 'regression').
         """
+        print("Analyzing feature importances.")
         model = self.models.get(model_type)
         if model is None:
             raise ValueError(f'Model {model_type} has not been trained yet!')
 
+        # Check for label encoding for classification tasks
+        if task_type == 'classification' and isinstance(self.y_test[0], str):
+            encoder = LabelEncoder()
+            self.y_test = encoder.fit_transform(self.y_test)
+
         # Use SHAP to explain predictions
-        explainer = shap.TreeExplainer(model) if model_type in ['random_forest', 'decision_tree'] else shap.Explainer(model)
+        explainer = (
+            shap.TreeExplainer(model)
+            if model_type in ['random_forest', 'decision_tree']
+            else shap.Explainer(model)
+        )
         shap_values = explainer.shap_values(self.X_test)
 
         # Summary plot
         print(f"Generating SHAP summary plot for {model_type}...")
-        shap.summary_plot(shap_values, self.X_test, plot_type="bar")
+        if task_type == 'classification' and isinstance(shap_values, list):
+            shap.summary_plot(shap_values[1], self.X_test, plot_type="bar")  # For binary classification
+        else:
+            shap.summary_plot(shap_values, self.X_test, plot_type="bar")
 
 
-    def interpret_with_lime(self, model_type='random_forest', sample_index=0):
+    def interpret_with_lime(self, model_type='random_forest', sample_index=0, task_type='classification'):
         """
         Interpret model predictions using LIME for a specific instance.
         :param model_type: The model type to interpret.
         :param sample_index: Index of the sample to interpret from the test set.
+        :param task_type: The type of task ('classification' or 'regression').
         """
         model = self.models.get(model_type)
         if model is None:
             raise ValueError(f'Model {model_type} has not been trained yet!')
+
+        # Ensure y_train labels are encoded for classification
+        if task_type == 'classification' and isinstance(self.y_train[0], str):
+            encoder = LabelEncoder()
+            self.y_train = encoder.fit_transform(self.y_train)
 
         # Prepare the LIME explainer
         explainer = lime.lime_tabular.LimeTabularExplainer(
             training_data=self.X_train.values,
             feature_names=self.X_train.columns.tolist(),
-            class_names=['Target'],
-            mode='regression' if model_type in ['linear_regression'] else 'classification'
+            class_names=list(set(self.y_train)) if task_type == 'classification' else None,
+            mode=task_type
         )
 
         sample = self.X_test.iloc[sample_index].values
@@ -299,18 +336,25 @@ class StatisticalModeling:
         explanation.as_pyplot_figure()
         plt.show()
 
-    def compare_model_performance(self):
+
+    def compare_model_performance(self, task_type='classification'):
         """
         Compare the performance of all trained models.
+        :param task_type: The type of task ('classification' or 'regression').
         """
         if not self.models:
             print("No models have been trained yet!")
             return
 
+        # Ensure y_test labels are encoded for classification
+        if task_type == 'classification' and isinstance(self.y_test[0], str):
+            encoder = LabelEncoder()
+            self.y_test = encoder.fit_transform(self.y_test)
+
         performance_metrics = {}
         for model_type, model in self.models.items():
             print(f"Evaluating performance for {model_type}...")
-            metrics = self.evaluate_model(model_type=model_type)
+            metrics = self.evaluate_model(model_type=model_type, task_type=task_type)
             performance_metrics[model_type] = metrics
 
         # Report performance comparison
@@ -318,7 +362,6 @@ class StatisticalModeling:
         for model_type, metrics in performance_metrics.items():
             print(f"{model_type}: {metrics}")
 
-        return performance_metrics
 
 
 
