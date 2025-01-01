@@ -39,6 +39,8 @@ You can clone my project and use it freely and then contribute to this project.
 - Git, GitHub setup, dev setup including GitHub action,  Adding `pylint' in the GitHub workflows
 - Statistical and EDA analysis on the data, ploting
 - Data Version Control setup and commits
+- A\B hypothesis Testing
+- Statistical Modeling
 
 #### GitHub Action
 - Go to the main directory of this repo, create paths, `.github/workflows`. And then add `pylint` linters
@@ -55,6 +57,7 @@ In this portion of the task the following analysis has been conducted.
 
 - Data Quality Check:
     Identify and address missing values.
+    Run the jupyter notebook named `data_cleaning.ipynb` to clean data
 
 - Univariate Analysis:
     Plot histograms for numerical variables and bar charts for categorical ones.
@@ -70,6 +73,7 @@ In this portion of the task the following analysis has been conducted.
 
 - Visualization:
     Create 3 visually appealing plots to highlight key insights from the analysis.
+- To view the results open the jupyter notebook named `eda.ipynb`
 
 #### Data Version Control
 - The main purpose of this task is to allow learners exercise in applying version control on data
@@ -77,14 +81,32 @@ In this portion of the task the following analysis has been conducted.
 - Create directory where data will be stored, applied modificationa, and then tracked
 - Setup the local remote storage by running `dvc remote add -d localstorage dvc directory` command
 - Run `dvc add "your path/dvc directory/"` command for the dvc to track it
-- Create dvc pipeline execution scripts for perprocessing
+- Create dvc pipeline execution scripts for perprocessing (`scripts/preprocessing.py`)
 - Run `dvc repro` in the main directory of the repo to automatically run all the pipeline stages
+
+###  A\B hypothesis Testing
+- The main purpose of this task is to assess risk based on Provinces, Postal codes, and gender. It also assesses whether postal code affects the margin (profit).
+- You can import `data_cleaning` module and call the `pipeline-process` method to clean the datset comprehensively.
+- You can use the already saved cleaned data, `Final_cleaned_data.csv` to expediate the loading of data either.
+- It uses `t-test` Python package to test the null hypotheses.
+- `hypothesis_testing` module is dedicated for this task. The class `AB/Hypothesistesting` encapsulates methods and data necessary to conduct `t-test` and analyze the results.
+- To view the results open the jupyter notebook named `hypothesis_testing.ipynb`
+
+### Statistical Modeling
+- Tasks such as feature engineering, spliting training training and test data using scikit package
+- You can either importt `data_cleaning` module to exhasitively or you can use the already cleaned data,`"../data/final_cleaned_data`"
+- Building linear regression model based on Postal codes as features and total claims as target variable
+- Building optimal machine learning models and evaluting. The models built are Decision Tree, Random Forest and extreme Gradient Boosting (XGBoost) classification algorithms.
+- Evaluating variable importance using `SHAP` module
+- Conducting model prediction interpretability using `lime` package.
+- Comparing the performance of models using various performance metrics, such as accuracy, precision, recall, and F1-score for classificatuion models and Mean Square Error (MSE) and Root Mean Square Error (RMSE) for regression models
+- To view the results open the jupyter notebook named `statistical_modeling_pipeline_processing.ipynb`
 
 > #### You can gain more insights by running the jupter notebook and view plots.
 
 
 ### More information
-- You can refer to [this link](Coming Soon!) to gain more insights about the presentation of this project results.
+- You can refer to [this link](https://drive.google.com/file/d/161hl8CwR9lk1vgIF4Zdy-nSPM47N6d8U/view?usp=sharing) to gain more insights about the reports of this project results.
 
 ## Authors
 

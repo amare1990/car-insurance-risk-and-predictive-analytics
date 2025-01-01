@@ -31,6 +31,7 @@ click==8.1.8
 click-didyoumean==0.3.1
 click-plugins==1.1.1
 click-repl==0.3.0
+cloudpickle==3.1.0
 colorama==0.4.6
 comm==0.2.2
 configobj==5.0.9
@@ -74,6 +75,7 @@ httpcore==1.0.7
 httpx==0.28.1
 hydra-core==1.3.2
 idna==3.10
+imageio==2.35.1
 importlib_metadata==8.5.0
 importlib_resources==6.4.5
 iniconfig==2.0.0
@@ -98,6 +100,9 @@ jupyterlab_pygments==0.3.0
 jupyterlab_server==2.27.3
 kiwisolver==1.4.7
 kombu==5.4.2
+lazy_loader==0.4
+lime==0.2.0.1
+llvmlite==0.41.1
 markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 matplotlib==3.7.5
@@ -113,7 +118,9 @@ nest-asyncio==1.6.0
 networkx==3.1
 notebook==7.3.2
 notebook_shim==0.2.4
+numba==0.58.1
 numpy==1.24.4
+nvidia-nccl-cu12==2.23.4
 omegaconf==2.3.0
 orjson==3.10.12
 overrides==7.7.0
@@ -149,6 +156,7 @@ pytest==8.3.4
 python-dateutil==2.9.0.post0
 python-json-logger==3.2.1
 pytz==2024.2
+PyWavelets==1.4.1
 PyYAML==6.0.2
 pyzmq==26.2.0
 referencing==0.35.1
@@ -159,16 +167,19 @@ rich==13.9.4
 rpds-py==0.20.1
 ruamel.yaml==0.18.6
 ruamel.yaml.clib==0.2.8
+scikit-image==0.21.0
 scikit-learn==1.3.2
 scipy==1.10.1
 scmrepo==2.0.4
 seaborn==0.13.2
 semver==3.0.2
 Send2Trash==1.8.3
+shap==0.44.1
 shellingham==1.5.4
 shortuuid==1.0.13
 shtab==1.7.1
 six==1.17.0
+slicer==0.0.7
 smmap==5.0.1
 sniffio==1.3.1
 soupsieve==2.6
@@ -177,6 +188,7 @@ stack-data==0.6.3
 tabulate==0.9.0
 terminado==0.18.1
 threadpoolctl==3.5.0
+tifffile==2023.7.10
 tinycss2==1.4.0
 tomli==2.2.1
 tomlkit==0.13.2
@@ -192,6 +204,7 @@ voluptuous==0.14.2
 wcwidth==0.2.13
 webencodings==0.5.1
 websocket-client==1.8.0
+xgboost==2.1.3
 yarl==1.15.2
 zc.lockfile==3.0.post1
 zipp==3.20.2
