@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.metrics import mean_squared_error, accuracy_score, precision_score, recall_score, f1_score
 import xgboost as xgb
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
@@ -41,28 +41,6 @@ class StatisticalModeling:
         self.models = {}
 
 
-    def handle_missing_data(self, threshold=0.3):
-        """
-        Handle missing values:
-        - Drop columns with > threshold missing values.
-        - Impute remaining missing values with mean (numerical) or mode (categorical).
-        :param threshold: The threshold for the percentage of missing values allowed in columns.
-        """
-        # Drop columns with > threshold missing values
-        missing_percent = self.data.isnull().mean()
-        columns_to_drop = missing_percent[missing_percent > threshold].index.tolist()
-        self.data.drop(columns=columns_to_drop, axis=1, inplace=True)
-        print(f"Dropped columns: {columns_to_drop}")
-
-        # Impute remaining missing values
-        for column in self.data.columns:
-            if self.data[column].isnull().sum() > 0:
-                if self.data[column].dtype in ['float64', 'int64']:
-                    self.data[column].fillna(self.data[column].mean(), inplace=True)
-                else:
-                    self.data[column].fillna(self.data[column].mode()[0], inplace=True)
-        print("Imputed remaining missing values.")
-
     def feature_engineering(self):
         """
         Create new features relevant to the prediction of TotalPremium and TotalClaims.
@@ -71,24 +49,52 @@ class StatisticalModeling:
         self.data['PremiumPerClaim'] = self.data['TotalPremium'] / (self.data['TotalClaims'] + 1)
         print("Created new feature: PremiumPerClaim")
 
-    def encode_categorical_data(self, method='one-hot'):
-        categorical_columns = self.data.select_dtypes(include=['object']).columns
-        for col in categorical_columns:
-            print(f"{col}: {self.data[col].nunique()} unique values")
+    def encode_categorical_data(self, method='one-hot', features_to_encode=None):
+        """
+        Encodes categorical features in the dataset.
+        :param method: Encoding method ('one-hot' or 'label').
+        :param features_to_encode: List of columns to encode. If None, all categorical columns will be encoded.
+        """
+        # Identify date-like columns and exclude them
+        date_columns = []
+        for col in self.data.columns:
+            try:
+                pd.to_datetime(self.data[col], errors='coerce')  # Check if column is date-like
+                date_columns.append(col)
+            except Exception:
+                continue
 
+        # Determine features to encode if not explicitly provided
+        if features_to_encode is None:
+            features_to_encode = self.data.select_dtypes(include=['object']).columns.tolist()
+
+        # Exclude date-like columns from encoding
+        features_to_encode = [col for col in features_to_encode if col not in date_columns]
+
+        # Print info about columns being encoded
+        print(f"Columns to encode: {features_to_encode}")
+        print(f"Date-like columns excluded: {date_columns}")
+
+        # Perform encoding
         if method == 'one-hot':
-            self.data = pd.get_dummies(self.data, columns=categorical_columns, drop_first=True)
+            self.data = pd.get_dummies(self.data, columns=features_to_encode, drop_first=True)
         elif method == 'label':
             label_enc = LabelEncoder()
-            for col in categorical_columns:
+            for col in features_to_encode:
                 self.data[col] = label_enc.fit_transform(self.data[col])
         else:
             raise ValueError(f"Unsupported encoding method: {method}")
-        # Saving encoded data
-        output_file="../data/Encoded_data.csv"
-        self.outpu_file = output_file
+
+
+
+        # Saving the encoded data
+        output_file = "../data/Encoded_data.csv"
+        self.output_file = output_file
         self.data.to_csv(self.output_file, index=False)
         print(f"Encoded categorical columns using {method} encoding.")
+
+
+
 
 
     def split_data(self, target="TotalClaims", test_size=0.2):
@@ -105,12 +111,6 @@ class StatisticalModeling:
         print(f"Data split into {len(self.X_train)} train samples and {len(self.X_test)} test samples.")
 
     def fit_postalcode_models(self, postalcode_column="PostalCode", target="TotalClaims"):
-        """
-        Fit a linear regression model for each unique zipcode to predict TotalClaims.
-        :param zipcode_column: The column representing zipcodes.
-        :param target: The target column to predict.
-        :return: Dictionary of models for each zipcode.
-        """
         postalcode_models = {}
         unique_postalcodes = self.data[postalcode_column].unique()
 
@@ -121,6 +121,10 @@ class StatisticalModeling:
 
             X = postalcode_data.drop(columns=[target, postalcode_column])
             y = postalcode_data[target]
+
+            # Ensure X is numeric
+            X = X.select_dtypes(include=['float64', 'int64'])
+
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
             model = LinearRegression()
@@ -130,58 +134,126 @@ class StatisticalModeling:
         print(f"Fitted linear regression models for {len(postalcode_models)} postalcodes.")
         return postalcode_models
 
-
-    def build_model(self, features, target="CalculatedPremiumPerTerm", model_type="random_forest"):
+    def build_models(self, features, target, model_types=None, task_type="regression"):
         """
-        Build the model based on the selected type.
-        :param model_type: The type of model to build. Options: 'linear_regression', 'decision_tree', 'random_forest', 'xgboost'.
+        Build and train models based on the task type (regression or classification).
+        :param features: DataFrame containing features.
+        :param target: Target column name.
+        :param model_types: List of model types to train.
+        :param task_type: Type of task ('regression' or 'classification').
+        :return: Dictionary of trained models.
         """
-        X = self.data[features]
+        models = {}
+        X = self.data.drop(columns=[target])
         y = self.data[target]
 
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        # For classification task, create target variable for profit/loss
+        if task_type == "classification":
+            features['profit_loss'] = (features['TotalPremium'] - features['TotalClaims']).apply(
+                lambda x: 'profit' if x > 0 else 'loss')
+            y = features['profit_loss']  # Update target variable to profit_loss
 
-        if model_type=='linear_regression':
-            model = LinearRegression()
-        elif model_type == 'decision_tree':
-            model = DecisionTreeRegressor(random_state=42)
-        elif model_type == 'random_forest':
-            model = RandomForestRegressor(n_estimators=100, random_state=42)
-        elif model_type == 'xgboost':
-            model = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100, random_state=42)
+            unique_classes = len(y.unique())
+            print(f"Detected classification task with {unique_classes} classes.")
+            y = y.astype('category') if unique_classes > 2 else y
         else:
-            raise ValueError(f'Unsupported model type: {model_type}')
+            print("Detected regression task.")
 
-        model.fit(self.X_train, self.y_train)
-        self.models[model_type] = model
-        print(f'Model {model_type} built and trained')
+        # Step 4: Split data into training and testing sets
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        self.X_train = X_train
+        self.X_test = X_test
+        self.y_train = y_train
+        self.y_test = y_test
+        print(f"Data split into training and testing sets: {len(X_train)} training samples, {len(X_test)} testing samples.")
 
-    def evaluate_model(self, model_type='linear_regression'):
+        for model_type in model_types:
+            print(f"Training {model_type} model...")
+
+            # Select model based on task type
+            if task_type == "regression":
+                print(f"Regression model, {model_type} being trained")
+                if model_type == 'linear_regression':
+                    model = LinearRegression()
+                elif model_type == 'decision_tree':
+                    model = DecisionTreeRegressor()
+                elif model_type == 'random_forest':
+                    model = RandomForestRegressor()
+                elif model_type == 'xgboost':
+                    model = xgb.XGBRegressor()
+                else:
+                    print(f"Unsupported regression model: {model_type}")
+                    continue
+            elif task_type == "classification":
+                print(f"Classification model, {model_type} being trained")
+                if model_type == 'decision_tree':
+                    model = DecisionTreeClassifier()
+                elif model_type == 'random_forest':
+                    model = RandomForestClassifier()
+                elif model_type == 'xgboost':
+                    model = xgb.XGBClassifier()
+                else:
+                    print(f"Unsupported classification model: {model_type}")
+                    continue
+            else:
+                print(f"Unsupported task type: {task_type}")
+                continue
+
+            # Train the model
+            model.fit(self.X_train, y_train)
+            models[model_type] = model
+            print(f"{model_type} model trained successfully.")
+
+        return models
+
+
+
+    def evaluate_model(self, model_type):
         """
-        Evaluate the model using appropriate metrics like RMSE, accuracy, precision, recall, and F1 score.
+        Evaluate the performance of a trained model.
         :param model_type: The model type to evaluate.
-        :return: Model evaluation metrics.
         """
+        # Retrieve the model
         model = self.models.get(model_type)
         if model is None:
             raise ValueError(f'Model {model_type} has not been trained yet!')
 
         # Make predictions
-        predictions = model.predict(self.X_test)
-        # For regression models, we use MSE, RMSE, and R2
-        # For classification models, we can use accuracy, precision, recall, F1-score
-        if model_type == 'linear_regression' or model_type in ['decision_tree', 'random_forest']:
-            mse = mean_squared_error(self.y_test, predictions)
+        y_pred = model.predict(self.X_test)
+
+        if isinstance(model, (LinearRegression, DecisionTreeRegressor, RandomForestRegressor, xgb.XGBRegressor)):
+            # Regression evaluation
+            print(f"Regression evaluation for {model_type} taking place...")
+            mse = mean_squared_error(self.y_test, y_pred)
             rmse = np.sqrt(mse)
-            print(f'Model {model_type}- RMSE: {rmse}, MSE: {mse}')
-            return {'RMSE':rmse, 'MSE': mse}
+            print(f'{model_type} Evaluation:')
+            print(f'MSE: {mse}')
+            print(f'RMSE: {rmse}')
+            return {"MSE": mse, "RMSE": rmse}
+
+        elif isinstance(model, (DecisionTreeClassifier, RandomForestClassifier, xgb.XGBClassifier)):
+            # Classification evaluation
+            print(f"Classification evaluation for {model_type} taking place...")
+
+            if len(self.y_test.unique()) > 2:  # Multiclass
+                predictions = np.argmax(y_pred, axis=1) if hasattr(model, "predict_proba") else y_pred
+                average = 'weighted'
+            else:  # Binary classification
+                predictions = (y_pred > 0.5).astype(int) if hasattr(model, "predict_proba") else y_pred
+                average = 'binary'
+
+            accuracy = accuracy_score(self.y_test, predictions)
+            precision = precision_score(self.y_test, predictions, average=average, zero_division=1)
+            recall = recall_score(self.y_test, predictions, average=average, zero_division=1)
+            f1 = f1_score(self.y_test, predictions, average=average, zero_division=1)
+
+            print(f'Model {model_type} - Accuracy: {accuracy}, Precision: {precision}, Recall: {recall}, F1_score: {f1}')
+            return {"Accuracy": accuracy, "Precision": precision, "Recall": recall, "F1-score": f1}
+
         else:
-            acurracy = accuracy_score(self.y_test, predictions)
-            precision = precision_score(self.y_test, predictions, average='binary', zero_division=1)
-            recall = recall_score(self.y_test, predictions, average='binary', zero_division=1)
-            f1 = f1_score(self.y_test, predictions, average='binary', zero_division=1)
-            print(f'Model {model_type} - Accuracy: {acurracy}, Precision: {precision}, Recall: {recall}, F1_score: {f1}')
-            return {"Accuracy": acurracy, "Precision": precision, "Recall": recall, "F1-score": f1}
+            raise ValueError(f"Unsupported model type: {model_type}")
+
+
 
     def analyze_feature_importance(self, model_type='random_forest'):
         """
@@ -216,7 +288,7 @@ class StatisticalModeling:
             training_data=self.X_train.values,
             feature_names=self.X_train.columns.tolist(),
             class_names=['Target'],
-            mode='regression' if model_type in ['linear_regression', 'decision_tree', 'random_forest'] else 'classification'
+            mode='regression' if model_type in ['linear_regression'] else 'classification'
         )
 
         sample = self.X_test.iloc[sample_index].values
